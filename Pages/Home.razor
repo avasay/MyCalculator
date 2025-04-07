@@ -1,0 +1,230 @@
+﻿@page "/"
+@page "/home"
+
+
+<!-- Main container with better mobile spacing -->
+<div class="container mx-auto p-4 md:p-8 flex flex-col items-center">
+<h1 style="font-size:2em">A Simple Calculator</h1>
+    <div class="w-full max-w-sm">
+        <!-- Reduced max-width for better mobile appearance -->
+        <!-- Calculator container with improved padding -->
+        <div class="bg-gray-100 p-3 md:p-4 rounded-lg shadow-md">
+            <!-- Expression Display -->
+            <div class="bg-white p-2 md:p-3 mb-2 rounded min-h-[2rem]">
+                <div class="w-full text-right text-gray-600 text-sm md:text-lg overflow-x-auto">@expression</div>
+            </div>
+            <!-- Result Display -->
+            <div class="bg-white p-2 md:p-3 mb-3 rounded">
+                <input type="text" @bind="currentNumber" class="w-full text-right text-xl md:text-2xl font-semibold bg-transparent outline-none" readonly />
+            </div>
+
+            <!-- Calculator Buttons - Optimized for mobile -->
+            <div class="grid grid-cols-4 gap-2 md:gap-3">
+                <!-- Clear and Delete -->
+                <button @onclick="Clear" class="p-3 md:p-4 bg-red-500 text-white rounded-lg hover:bg-red-600 text-lg md:text-xl transition-colors">C</button>
+                <button @onclick="Delete" class="p-3 md:p-4 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 text-lg md:text-xl transition-colors">⌫</button>
+                <button @onclick="@(() => HandleOperator("%"))" class="p-3 md:p-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-lg md:text-xl transition-colors">%</button>
+                <button @onclick="@(() => HandleOperator("/"))" class="p-3 md:p-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-lg md:text-xl transition-colors">÷</button>
+
+                <!-- Numbers and Operations - Same pattern for all buttons -->
+                <button @onclick="@(() => HandleNumber("7"))" class="p-3 md:p-4 bg-gray-200 rounded-lg hover:bg-gray-300 text-lg md:text-xl transition-colors">7</button>
+                <button @onclick="@(() => HandleNumber("8"))" class="p-3 md:p-4 bg-gray-200 rounded-lg hover:bg-gray-300 text-lg md:text-xl transition-colors">8</button>
+                <button @onclick="@(() => HandleNumber("9"))" class="p-3 md:p-4 bg-gray-200 rounded-lg hover:bg-gray-300 text-lg md:text-xl transition-colors">9</button>
+                <button @onclick="@(() => HandleOperator("*"))" class="p-3 md:p-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-lg md:text-xl transition-colors">×</button>
+
+                <button @onclick="@(() => HandleNumber("4"))" class="p-3 md:p-4 bg-gray-200 rounded-lg hover:bg-gray-300 text-lg md:text-xl transition-colors">4</button>
+                <button @onclick="@(() => HandleNumber("5"))" class="p-3 md:p-4 bg-gray-200 rounded-lg hover:bg-gray-300 text-lg md:text-xl transition-colors">5</button>
+                <button @onclick="@(() => HandleNumber("6"))" class="p-3 md:p-4 bg-gray-200 rounded-lg hover:bg-gray-300 text-lg md:text-xl transition-colors">6</button>
+                <button @onclick="@(() => HandleOperator("-"))" class="p-3 md:p-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-lg md:text-xl transition-colors">-</button>
+
+                <button @onclick="@(() => HandleNumber("1"))" class="p-3 md:p-4 bg-gray-200 rounded-lg hover:bg-gray-300 text-lg md:text-xl transition-colors">1</button>
+                <button @onclick="@(() => HandleNumber("2"))" class="p-3 md:p-4 bg-gray-200 rounded-lg hover:bg-gray-300 text-lg md:text-xl transition-colors">2</button>
+                <button @onclick="@(() => HandleNumber("3"))" class="p-3 md:p-4 bg-gray-200 rounded-lg hover:bg-gray-300 text-lg md:text-xl transition-colors">3</button>
+                <button @onclick="@(() => HandleOperator("+"))" class="p-3 md:p-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-lg md:text-xl transition-colors">+</button>
+
+                <button @onclick="@(() => HandleNumber("0"))" class="p-3 md:p-4 bg-gray-200 rounded-lg hover:bg-gray-300 text-lg md:text-xl transition-colors col-span-2">0</button>
+                <button @onclick="@(() => HandleNumber("."))" class="p-3 md:p-4 bg-gray-200 rounded-lg hover:bg-gray-300 text-lg md:text-xl transition-colors">.</button>
+                <button @onclick="Calculate" class="p-3 md:p-4 bg-green-500 text-white rounded-lg hover:bg-green-600 text-lg md:text-xl transition-colors">=</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@code {
+    private string currentNumber = "0";
+    private string firstNumber = "";
+    private string operation = "";
+    private bool newNumber = true;
+    private string expression = "";
+    private bool percentMode = false;
+    private bool percentAfterFirstNumber = false;
+
+    private void HandleNumber(string number)
+    {
+        if (newNumber)
+        {
+            currentNumber = number;
+            newNumber = false;
+            // Reset percentage-related flags when starting a new number
+            //percentMode = false;
+            //percentAfterFirstNumber = false;
+        }
+        else
+        {
+            if (number == "." && currentNumber.Contains("."))
+                return;
+            currentNumber += number;
+        }
+    }
+
+    private void HandleOperator(string op)
+    {
+
+        if (op == "%")
+        {
+            // If percentage is entered after a number
+            if (!newNumber)
+            {
+                if (string.IsNullOrEmpty(firstNumber))
+                {
+                    // Percentage entered first (10% x 100)
+                    percentMode = true;
+                    
+                    currentNumber = (double.Parse(currentNumber) / 100).ToString();
+                    firstNumber = currentNumber;
+                    newNumber = true;
+                }
+                else
+                {
+                    // Percentage entered after first number (100 x 10%)
+                    percentMode = true;
+                    percentAfterFirstNumber = true;
+                    currentNumber = (double.Parse(currentNumber) / 100).ToString();
+                    newNumber = false;
+                }
+                UpdateExpression();
+
+            }
+            return;
+        }
+
+        if (string.IsNullOrEmpty(firstNumber))
+        {
+            firstNumber = currentNumber;
+            operation = op;
+            UpdateExpression();
+            newNumber = true;
+        }
+        else
+        {
+            Calculate();
+            firstNumber = currentNumber;
+            operation = op;
+            UpdateExpression();
+            newNumber = true;
+        }
+    }
+
+    private void UpdateExpression()
+    {
+
+        string displayOp = operation switch
+        {
+            "*" => "×",
+            "/" => "÷",
+            _ => operation
+        };
+
+        if (percentMode)
+        {
+            if (percentAfterFirstNumber)
+            {
+                expression = $"{firstNumber} {displayOp} {currentNumber}";
+            }
+            else
+            {
+                expression = $"{firstNumber}  {displayOp}";
+            }
+        }
+        else if (!string.IsNullOrEmpty(operation))
+        {
+            expression = $"{firstNumber} {displayOp}";
+        }
+    }
+
+    private void Calculate()
+    {
+
+        if (string.IsNullOrEmpty(firstNumber) || newNumber)
+        {
+            return;
+        }
+
+        double n1 = double.Parse(firstNumber);
+        double n2 = double.Parse(currentNumber);
+        double result = 0;
+
+        
+        
+        string displayOp = operation switch
+        {
+            "*" => "×",
+            "/" => "÷",
+            _ => operation
+        };
+        expression = $"{firstNumber} {displayOp} {currentNumber} =";
+
+        switch (operation)
+        {
+            case "+":
+                result = n1 + n2;
+                break;
+            case "-":
+                result = n1 - n2;
+                break;
+            case "*":
+                result = n1 * n2;
+                break;
+            case "/":
+                if (n2 != 0)
+                    result = n1 / n2;
+                else
+                {
+                    currentNumber = "Error";
+                    expression = "Division by zero";
+                    return;
+                }
+                break;
+        }
+
+        if (currentNumber != "Error")
+            currentNumber = result.ToString();
+        
+
+        firstNumber = "";
+        operation = "";
+        newNumber = true;
+        percentMode = false;
+        percentAfterFirstNumber = false;
+    }
+
+    private void Clear()
+    {
+        currentNumber = "0";
+        firstNumber = "";
+        operation = "";
+        newNumber = true;
+        expression = "";
+        percentMode = false;
+        percentAfterFirstNumber = false;
+    }
+
+    private void Delete()
+    {
+        if (currentNumber.Length > 1)
+            currentNumber = currentNumber.Substring(0, currentNumber.Length - 1);
+        else
+            currentNumber = "0";
+    }
+}
